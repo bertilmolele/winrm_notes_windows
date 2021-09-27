@@ -1,0 +1,127 @@
+I- Prérequis
+
+Une machine LINUX ( Master_Ansible, OS Debian ou CentOS)
+Un ou plusieurs Nodes Linux ou Windows (Noeuds sur lesquels seront exécutées les tâches)
+Installer un editeur (Vi, Vim, Nano, ...)
+Désactiver la mise à jour par CD-ROM sur tous les noeuds LINUX
+
+II- Préparation de la machine Master
+
+1- Installation de ssh
+
+1-1 Mise à jour des depot
+$> sudo apt -yf update 
+$> sudo apt -yf upgrade
+
+1.2 Installation de SSH
+$> sudo apt install ssh -y
+$> ssh-keygen -t ecdsa -b 512
+
+1.3 Copie de la clé ssh sur les Nodes (LINUX)
+$> ssh-copy-id -d ~/.ssh/id_ecdsa "Nom_User"@"IP"
+
+1.4 Creation d'un Agent SSH
+$> eval $(ssh-agent)
+$> ssh-add
+$> vim ./bashrc
+    > #some more ls aliases
+    > alias "Nom_alias"='eval $(ssh-agent) && ssh-add'
+
+2- Ajout des repository
+
+$> sudo vim /etc/apt/sources.list
+    > deb https://ppa.launchpad.net/ansible/ansible/ubuntu MATCHING_UBUNTU_CODENAME_HERE main
+$> sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
+
+3- Installation des Python et PIP
+
+$> sudo apt install python3.7 python-dev gcc 
+$> curl -O https://bootstrap.pypa.io/get-pip.py
+$> python3 get-pip.py --user
+
+III- Ansible sur le Master
+
+1- Installation d'Ansible
+
+$> sudo apt update -yf
+$> sudo apt install ansible -yf
+$> ansible --version
+
+2- Gestion des noeuds LINUX
+
+2.2- Fichiers de configuration
+
+#Créer un dossier global selon le projet dans mon cas "lab_ansible
+$> mkdir lab_ansible
+
+#Création d'un fichier de gestion des machines noeuds à joindre à Ansible
+lab_ansible$> Vim Inventory_host
+              > ["nom_group"]
+                adresse IP 1
+                adresse IP 2
+                           |
+                adresse IP N
+                
+#Création d'un fichier de configuration d'ansible (gestion de fichier centralisé)
+lab_ansible$> vim ansible.cfg
+              > [defaults]
+                inventory = Inventory_host
+                private_key_file = ~/.ssh/id_ecdsa
+
+#Test de connexion SSH au node 
+lab_ansible$> ansible all --key-file ~/.ssh/id_ecdsa -i inventory_host -m ping
+lab_ansible$> ansible all -m ping
+
+#Lister les noeuds qui ont été joint à ansible
+lab_ansible$> ansible all --lists-hosts
+
+#Vérifier l'activité en détails sur les noeuds
+lab_ansible$> ansible all -m gather_facts --limit "IP-noeuds"
+
+#Mise à jour à distance des noeuds
+lab_ansible$> ansible all -m apt -a "update_cache = true" --become --ask-become-pass
+lab_ansible$> ansible all -m apt -a "upgrade= dist" --become --ask-become-pass
+
+2.3 Exemple de playbook (fichier de configuration d'actions à réalisé à distance généralement en yaml)
+
+#Création d'utilisateur à distance
+lab_ansible$> vim create_user.yml
+              > ---
+                - hosts: node_debian
+                  become: true
+                  tasks:
+                  - name: creation dun user mitch
+                    tags: "tag_name"
+                    user:
+                    name: "User_name"
+                    groups: root
+
+                 - name: ajout de la clé ssh pour mitch
+                   tags: "tag_name"
+                   authorized_key:
+                     user: "user_name"
+                     key: "Cle_ssh_master"
+
+                 - name: ajout au fichier sudoers
+                   tags: "tag_name"
+                   copy:
+                     src: sudoer_mitch
+                     dest: /etc/sudoers.d/mitch
+                     owner: root
+                     group: root
+                     mode: 0440
+#Ajout des droits sudo à l'utilisateur
+lab_ansible$> mkdir files
+lab_ansible$> vim files/sudoer_user
+              > "User_name" ALL=(ALL) NOPASSWD: ALL
+
+#Lancer l'execution d'un playbook à distance
+lab_ansible$> ansible-playbook --ask-become-pass "Nom_fichier"
+
+3- Gestion des noeuds WINDOWS
+
+3.1- Installer Winrm sur le master
+#utilisation de pip pour installer winrm
+lab_ansible$> sudo pip install pywinrm
+
+

@@ -124,6 +124,7 @@ lab_ansible$> ansible-playbook --ask-become-pass "Nom_fichier"
 #utilisation de pip pour installer winrm
 lab_ansible$> sudo pip install pywinrm
 #
+            ########### config à compléter ############
 
 
 

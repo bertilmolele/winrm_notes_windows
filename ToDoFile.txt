@@ -123,5 +123,13 @@ lab_ansible$> ansible-playbook --ask-become-pass "Nom_fichier"
 3.1- Installer Winrm sur le master
 #utilisation de pip pour installer winrm
 lab_ansible$> sudo pip install pywinrm
+#
 
 
+
+3.2- Configuration de winrm sur windows
+
+#configuration de base de winrm avec powershell
+> winrm quickconfig
+> winrm set winrm/config/service @{AllowUnencrypted="true"}
+> winrm set winrm/config/service @{Basic="true"}

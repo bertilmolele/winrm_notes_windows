@@ -1,6 +1,0 @@
----
-ansible_user: mitch
-ansible_password: Steph@ne
-ansible_connection: winrm
-ansible_winrm_transport: basic
-ansible_winrm_port: 5985

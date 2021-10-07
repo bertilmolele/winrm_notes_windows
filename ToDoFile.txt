@@ -36,6 +36,9 @@ $> sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C36
 3- Installation des Python et PIP
 
 $> sudo apt install python3.7 python-dev gcc 
+$> sudo apt install python3-pip
+
+#dans certains les commandes ci-dessous servent à installer pip
 $> curl -O https://bootstrap.pypa.io/get-pip.py
 $> python3 get-pip.py --user
 
@@ -127,18 +130,21 @@ lab_ansible$> sudo pip install pywinrm
 lab_ansible$> mkdir group_vars
 lab_ansible$> vim windows.yml
                 > ---
+                  ansible_connection: winrm
                   ansible_user: "username"
                   ansible_password: "password"
-                  ansible_connection: winrm
-                  ansible_port: 5985
+                  ansible_winrm_port: 5985
                   ansible_winrm_transport: Basic
                   ansible_winrm_server_cert_validation: ignore
                   
-
-                 
-            ########### config à compléter ############
-
-
+# Ou l'ajouter directement dans le fichier inventory (dans notre cas /etc/ansible/hosts)
+    > [windows:vars]
+        ansible_connection = winrm
+        ansible_user = "Username"
+        ansible_password = "password"
+        ansible_winrm_port: 5985
+        ansible_winrm_transport = basic
+        ansible_winrm_server_cert_validation = ignore
 
 3.2- Configuration de winrm sur windows
 
@@ -147,4 +153,8 @@ lab_ansible$> vim windows.yml
 > Enable-PSRemoting (autorisel'accès à distance)
 > winrm set winrm/config/service '@{AllowUnencrypted="true"}'
 > winrm set winrm/config/service '@{Basic="true"}'
-> Set-Item WSMan:\localhost\Client\TrustedHosts * (definir les machines qui peuvent avoir accès)
+> Set-Item -Force WSMan:\localhost\Service\auth\Basic $true (si l'auth est rejeté par le serveur)
+> winrm configsddl default
+    > # ajouter l'utilisateur créer (cocher sur execution(invoke) 
+> [Set-Item WSMan:\localhost\Client\TrustedHosts * (definir les machines qui peuvent avoir accès)] facultatif
+
